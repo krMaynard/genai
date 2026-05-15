@@ -78,7 +78,7 @@ class App(tk.Tk):
         ttk.Spinbox(opts, from_=1, to=10, width=4, textvariable=self.count_var).pack(side="left", padx=(4, 16))
 
         ttk.Label(opts, text="Output folder:").pack(side="left")
-        self.out_dir_var = tk.StringVar(value=os.path.expanduser("~/Desktop"))
+        self.out_dir_var = tk.StringVar(value=os.path.expanduser("~/Pictures/genai"))
         ttk.Entry(opts, textvariable=self.out_dir_var, width=28).pack(side="left", padx=4)
         ttk.Button(opts, text="Browse…", command=self._browse).pack(side="left")
 

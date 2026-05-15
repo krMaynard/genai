@@ -72,7 +72,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate images with Gemini")
     parser.add_argument("prompt", nargs="?", default=DEFAULT_PROMPT, help="Image generation prompt")
     parser.add_argument("-n", "--count", type=int, default=1, help="Number of images to generate (default: 1)")
-    parser.add_argument("-o", "--output-dir", default=".", help="Directory to save images (default: current dir)")
+    parser.add_argument("-o", "--output-dir", default=os.path.expanduser("~/Pictures/genai"), help="Directory to save images (default: ~/Pictures/genai)")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
