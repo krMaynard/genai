@@ -6,6 +6,7 @@ import os
 import random
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 
 from google import genai
@@ -78,9 +79,18 @@ def main():
 
     client = genai.Client(api_key=get_api_key())
 
-    for i in range(args.count):
-        print(f"Generating image {i + 1}/{args.count}...")
-        generate_image(client, args.prompt, args.output_dir)
+    print(f"Generating {args.count} image(s) in parallel…")
+    with ThreadPoolExecutor(max_workers=args.count) as executor:
+        futures = {
+            executor.submit(generate_image, client, args.prompt, args.output_dir): i + 1
+            for i in range(args.count)
+        }
+        for future in as_completed(futures):
+            idx = futures[future]
+            try:
+                future.result()
+            except Exception as exc:
+                print(f"Image {idx} failed: {exc}", file=sys.stderr)
 
 
 if __name__ == "__main__":

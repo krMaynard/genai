@@ -7,6 +7,7 @@ import subprocess
 import sys
 import threading
 import tkinter as tk
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -165,13 +166,22 @@ class App(tk.Tk):
     def _run_generation(self, api_key: str, prompt: str, count: int, out_dir: str):
         try:
             client = genai.Client(api_key=api_key)
-            for i in range(count):
-                self.after(0, self._log, f"Generating image {i + 1}/{count}…")
-                filename = self._generate_one(client, prompt, out_dir)
-                if filename:
-                    self.after(0, self._log, f"Saved: {filename}")
-                    if sys.platform == "darwin":
-                        subprocess.run(["open", filename], check=False)
+            self.after(0, self._log, f"Sending {count} request(s) in parallel…")
+            with ThreadPoolExecutor(max_workers=count) as executor:
+                futures = {
+                    executor.submit(self._generate_one, client, prompt, out_dir): i + 1
+                    for i in range(count)
+                }
+                for future in as_completed(futures):
+                    idx = futures[future]
+                    try:
+                        filename = future.result()
+                        if filename:
+                            self.after(0, self._log, f"Image {idx} saved: {filename}")
+                            if sys.platform == "darwin":
+                                subprocess.run(["open", filename], check=False)
+                    except Exception as exc:
+                        self.after(0, self._log, f"Image {idx} failed: {exc}")
         except Exception as exc:
             self.after(0, self._log, f"Error: {exc}")
         finally:
