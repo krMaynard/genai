@@ -47,6 +47,10 @@ def generate_image(client: genai.Client, prompt: str, output_dir: str) -> str | 
         ),
     )
 
+    if not response.candidates or not response.candidates[0].content:
+        print("Error: No content generated. The request may have been blocked.", file=sys.stderr)
+        return None
+
     image_filename = None
     for part in response.candidates[0].content.parts:
         if part.text is not None:
@@ -56,8 +60,8 @@ def generate_image(client: genai.Client, prompt: str, output_dir: str) -> str | 
             random_number = random.randint(0, 10000)
             image_filename = os.path.join(output_dir, f"{MODEL_NAME}_{random_number}.png")
             image.save(image_filename)
-            # Open with the system default image viewer on macOS
-            subprocess.run(["open", image_filename], check=False)
+            if sys.platform == "darwin":
+                subprocess.run(["open", image_filename], check=False)
             print(f"Saved: {image_filename}")
 
     return image_filename
